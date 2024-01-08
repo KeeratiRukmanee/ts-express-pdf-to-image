@@ -1,0 +1,10 @@
+version: '3'
+services:
+  server:
+    image: ts-express-pdf-to-image:latest
+    container_name: ts-express-pdf-to-image
+    restart: always
+    ports:
+      - "7000:3000"
+    volumes:
+      - ./mount/storage:/app/dist/storage
