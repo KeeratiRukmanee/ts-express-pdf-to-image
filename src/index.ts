@@ -36,20 +36,30 @@ app.post('/convert', upload.single('file'), (req, res) => {
     const projectId = uuidv4()
 
     const newDir: string = `${__dirname}/storage/${projectId}`
-    const filePath = path.join(newDir, file.originalname)
+    console.log(file.originalname.replace(/ /g, "_"))
+    // const filePath = path.join(newDir, file.originalname)
+    const filePath = path.join(newDir, file.originalname.replace(/ /g, "_"))
 
-    fs.mkdirSync(newDir);
+    fs.mkdirSync(newDir)
     fs.writeFile(filePath, file.buffer, (error) => {
         if (error) {
-            throw new Error(`${error}`)
+            res.json({ error: error })
         }
     })
 
     // gm convert -density 200 -quality 50%  -background white kme_RE.pdf[11] magick12-50.jpg
-    exec(`gm convert -density 200 -quality 75% ${filePath} +adjoin ${newDir}/${projectId}-%03d.jpg`, (err, stdout, stderr) => {
-        if (err) {
+    exec(`gm convert -density 200 -quality 75% ${filePath} +adjoin ${newDir}/${projectId}-%03d.jpg`, (error, stdout, stderr) => {
+        if (error) {
             // node couldn't execute the command
-            res.json({ error: err })
+
+            //TODO delete file and folder when error
+            // fs.rm(newDir, { recursive: true, force: true }, err => {
+            //     if (err) {
+            //         throw err;
+            //     }
+            // })
+
+            res.json({ error: error })
         }
 
         const files = fs.readdirSync(newDir)
@@ -58,7 +68,7 @@ app.post('/convert', upload.single('file'), (req, res) => {
 
         for (let i = 0; i < (files.length - 1); i++) {
             const fileIdx = _.padStart(i.toString(), 3, '0')
-            allFiles.push(`${req.baseUrl}/static/${projectId}/${projectId}-${fileIdx}.jpg`);
+            allFiles.push(`/static/${projectId}/${projectId}-${fileIdx}.jpg`);
         }
 
         let pages = files.length - 1
